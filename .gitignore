@@ -41,5 +41,5 @@
 .vscode/
 
 # Personal Journal write by markdown
-*.md
-!README.md
+personal_journal_*.md
+# !README.md
