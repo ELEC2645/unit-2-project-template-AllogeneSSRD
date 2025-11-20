@@ -4,8 +4,11 @@
 # 
 # Note to students: You dont need to fully understand this! 
 
+# the -lm at the end links the math library
+
 main.out:
 	gcc main.c funcs.c -o main.out -lm
+# 	gcc main.c funcs.c -o main.exe -lm
 
 clean:
 	-rm main.out

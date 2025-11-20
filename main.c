@@ -9,11 +9,18 @@
 #include "funcs.h"
 
 /* Prototypes mirroring the C++ version */
+// main menu
 static void main_menu(void);            /* runs in the main loop */
 static void print_main_menu(void);      /* output the main menu description */
-static int  get_user_input(void);       /* get a valid integer menu choice */
 static void select_menu_item(int input);/* run code based on user's choice */
 static void go_back_to_main(void);      /* wait for 'b'/'B' to continue */
+// sub menu
+static void sub_menu_1(void);
+static void print_sub_menu(void);
+static int select_sub_menu_item(int input);
+static int go_back_to_sub_menu(void);
+// input handling
+static int  get_user_input(void);       /* get a valid integer menu choice */
 static int  is_integer(const char *s);  /* validate integer string */
 
 int main(void)
@@ -74,7 +81,7 @@ static void select_menu_item(int input)
 {
     switch (input) {
         case 1:
-            menu_item_1();
+            sub_menu_1();
             go_back_to_main();
             break;
         case 2:
@@ -100,13 +107,13 @@ static void print_main_menu(void)
     printf("\n----------- Main menu -----------\n");
     printf("\n"
            "\t\t\t\t\t\t\n"
-           "\t1. Menu item 1\t\t\n"
-           "\t2. Menu item 2\t\t\n"
-           "\t3. Menu item 3\t\t\n"
-           "\t4. Menu item 4\t\t\n"
+           "\t1. Buck Converter - CCM\t\t\n"
+           "\t2. Buck Converter - DCM\t\t\n"
+           "\t3. Boost Converter - CCM\t\t\n"
+           "\t4. Boost Converter - DCM\t\t\n"
            "\t5. Exit\t\t\t\t\n"
            "\t\t\t\t\t\t\n");
-    printf("---------------------------------------------\n");
+    printf("-----------------------------------\n");
 }
 
 static void go_back_to_main(void)
@@ -120,6 +127,65 @@ static void go_back_to_main(void)
         }
         buf[strcspn(buf, "\r\n")] = '\0'; /* strip newline */
     } while (!(buf[0] == 'b' || buf[0] == 'B') || buf[1] != '\0');
+}
+
+
+static void sub_menu_1(void)
+{
+    for(;;) {
+        print_sub_menu();
+        {
+            int input = get_user_input();
+                printf("\nReturning to Main Menu...\n");
+                // Exit sub menu, return to main menu
+                break;
+            }
+            printf("\nReturn Sub Menu \n");
+    }
+}
+
+static void print_sub_menu(void)
+{
+    printf("\n--------- Sub Menu ---------\n");
+    printf("\n"
+           "\t\t\t\t\t\t\n"
+           "\t1. Duty cycle K\t\t\n"
+           "\t2. Sub Item 2\t\t\n"
+           "\t3. Back to Main Menu\t\t\n"
+           "\t\t\t\t\t\t\n");
+    printf("------------------------------\n");
+}
+
+static int select_sub_menu_item(int input)
+{
+    switch (input) {
+        case 1:
+            menu_item_1();
+            return go_back_to_sub_menu();
+            // break;
+        case 2:
+            menu_item_2();
+            return go_back_to_sub_menu();
+            // break;
+        default:
+            return 2;
+            /* return 2; back to main menu */
+    }
+}
+
+static int go_back_to_sub_menu(void)
+{
+    char buf[64];
+    do {
+        printf("\nEnter 'b' or 'B' to go back to sub menu: ");
+        if (!fgets(buf, sizeof(buf), stdin)) {
+            puts("\nInput error. Exiting.");
+            return 1; // Error, stay in sub menu
+        }
+        buf[strcspn(buf, "\r\n")] = '\0'; /* strip newline */
+    } while (!(buf[0] == 'b' || buf[0] == 'B') || buf[1] != '\0');
+
+    return 0; // Go back to sub menu
 }
 
 /* Return 1 if s is an optional [+/-] followed by one-or-more digits, else 0. */
