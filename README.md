@@ -2,6 +2,21 @@
 
 ![Teaching](docs/attachments/Teaching%2001_2.gif)
 
+## Power electronics
+
+Example:
+
+1. Duty cycle: K = vo / vi
+
+```c
+Parsed vo: 50 voltage
+Parsed vi: 200 voltage
+Using specified unit for K: 
+Fabry–Perot: {'m': '0.25 dimensionless'}
+```
+
+
+
 ## transistors and optoelectronics
 
 Examples:
@@ -37,4 +52,3 @@ Using specified unit for num_modes:
 modes_number: {'num_modes': '12.6315 dimensionless'}
 ```
 
-## Power electronics
