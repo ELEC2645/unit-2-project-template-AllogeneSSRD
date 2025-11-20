@@ -36,3 +36,10 @@
 *.exe
 *.out
 *.app
+
+# vscode
+.vscode/
+
+# Personal Journal write by markdown
+*.md
+!README.md
