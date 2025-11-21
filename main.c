@@ -136,6 +136,7 @@ static void sub_menu_1(void)
         print_sub_menu();
         {
             int input = get_user_input();
+                select_sub_menu_item(input);
                 printf("\nReturning to Main Menu...\n");
                 // Exit sub menu, return to main menu
                 break;
