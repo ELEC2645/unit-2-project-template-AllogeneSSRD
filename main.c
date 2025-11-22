@@ -1,5 +1,8 @@
-// ELEC2645 Unit 2 Project Template
-// Command Line Application Menu Handling Code
+// ELEC2645 Unit 2 Project
+// Auther: Xiangcheng Tao
+// Student ID: 202013365
+// Filename: main.c
+// Create date: 2025-11-19
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,16 +11,20 @@
 #include <math.h>
 #include "funcs.h"
 
+#define RETURN_OK 0   // Normal return
+#define RETURN_ERROR 1   // Wrong input or error
+#define RETURN_EXIT 2   // User chose to exit
+
+
 /* Prototypes mirroring the C++ version */
 // main menu
-static void main_menu(void);            /* runs in the main loop */
-static void print_main_menu(void);      /* output the main menu description */
-static void select_menu_item(int input);/* run code based on user's choice */
-static void go_back_to_main(void);      /* wait for 'b'/'B' to continue */
+static void main_menu(void);            // runs in the main loop
+static void print_main_menu(void);      // output the main menu description
+static void select_menu_item(int input); // run code based on user's choice
 // sub menu
-static void sub_menu_1(void);
-static void print_sub_menu(void);
-static int select_sub_menu_item(int input);
+static void sub_menu_buck_ccm(void);
+static void print_sub_menu_buck_ccm(void);
+static int select_sub_menu_buck_ccm(int input);
 static int go_back_to_sub_menu(void);
 // input handling
 static int  get_user_input(void);       /* get a valid integer menu choice */
@@ -52,7 +59,7 @@ static int get_user_input(void)
     do {
         printf("\nSelect item: ");
         if (!fgets(buf, sizeof(buf), stdin)) {
-            /* EOF or error; bail out gracefully */
+            // EOF or error; bail out gracefully
             puts("\nInput error. Exiting.");
             exit(1);
         }
@@ -81,20 +88,16 @@ static void select_menu_item(int input)
 {
     switch (input) {
         case 1:
-            sub_menu_1();
-            go_back_to_main();
+            sub_menu_buck_ccm();
             break;
         case 2:
             menu_item_2();
-            go_back_to_main();
             break;
         case 3:
             menu_item_3();
-            go_back_to_main();
             break;
         case 4:
             menu_item_4();
-            go_back_to_main();
             break;
         default:
             printf("Bye!\n");
@@ -116,61 +119,51 @@ static void print_main_menu(void)
     printf("-----------------------------------\n");
 }
 
-static void go_back_to_main(void)
-{
-    char buf[64];
-    do {
-        printf("\nEnter 'b' or 'B' to go back to main menu: ");
-        if (!fgets(buf, sizeof(buf), stdin)) {
-            puts("\nInput error. Exiting.");
-            exit(1);
-        }
-        buf[strcspn(buf, "\r\n")] = '\0'; /* strip newline */
-    } while (!(buf[0] == 'b' || buf[0] == 'B') || buf[1] != '\0');
-}
 
-
-static void sub_menu_1(void)
+static void sub_menu_buck_ccm(void)
 {
     for(;;) {
-        print_sub_menu();
+        print_sub_menu_buck_ccm();
         {
             int input = get_user_input();
-                select_sub_menu_item(input);
+            if (select_sub_menu_buck_ccm(input) == RETURN_EXIT) {
                 printf("\nReturning to Main Menu...\n");
                 // Exit sub menu, return to main menu
                 break;
             }
             printf("\nReturn Sub Menu \n");
+        }
     }
 }
 
-static void print_sub_menu(void)
+static void print_sub_menu_buck_ccm(void)
 {
-    printf("\n--------- Sub Menu ---------\n");
+    printf("\n---------- Buck Converter - CCM ----------\n");
     printf("\n"
-           "\t\t\t\t\t\t\n"
-           "\t1. Duty cycle K\t\t\n"
+           "\tChoice a formula to calculate.\n"
+           "\t1. Duty cycle: K = Vo / Vi\t\t\n"
            "\t2. Sub Item 2\t\t\n"
            "\t3. Back to Main Menu\t\t\n"
            "\t\t\t\t\t\t\n");
-    printf("------------------------------\n");
+    printf("--------------------------------------------\n");
 }
 
-static int select_sub_menu_item(int input)
+static int select_sub_menu_buck_ccm(int input)
 {
     switch (input) {
         case 1:
-            menu_item_1();
+            buck_ccm_duty_cycle();
             return go_back_to_sub_menu();
-            // break;
+            // return 0 for error
+            // return 1 for success
+
         case 2:
             menu_item_2();
             return go_back_to_sub_menu();
-            // break;
+
         default:
-            return 2;
-            /* return 2; back to main menu */
+            return RETURN_EXIT;
+            // return 2; back to main menu
     }
 }
 
@@ -181,12 +174,12 @@ static int go_back_to_sub_menu(void)
         printf("\nEnter 'b' or 'B' to go back to sub menu: ");
         if (!fgets(buf, sizeof(buf), stdin)) {
             puts("\nInput error. Exiting.");
-            return 1; // Error, stay in sub menu
+            return RETURN_ERROR; // Error, stay in sub menu
         }
         buf[strcspn(buf, "\r\n")] = '\0'; /* strip newline */
     } while (!(buf[0] == 'b' || buf[0] == 'B') || buf[1] != '\0');
 
-    return 0; // Go back to sub menu
+    return RETURN_OK; // Go back to sub menu
 }
 
 /* Return 1 if s is an optional [+/-] followed by one-or-more digits, else 0. */
