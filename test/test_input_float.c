@@ -1,14 +1,11 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include <ctype.h>
 #include <errno.h>
 #include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
-#ifndef RETURN_OK
-#define RETURN_OK 0   // Normal return
-#define RETURN_ERROR 1   // Wrong input or error
-#define RETURN_EXIT 2   // User chose to exit
-#endif
+#define DEBUG 1  // Set to 1 to enable debug output
 
 void input_float(double *value, const char * description);
 
@@ -16,37 +13,53 @@ void input_float(double *value, const char * description)
 {
     double input;
     char buf[128];
-    int success;
+
     do {
         printf("\nPlease enter value of %s: ", description);
         if (!fgets(buf, sizeof(buf), stdin)) {
-            printf("Input error. fgets()\n");
-            success = RETURN_ERROR;
+            if (DEBUG) printf("[Debug] Input error. fgets()\n");
         }
         buf[strcspn(buf, "\r\n")] = '\0'; // strip trailing newline
 
+        // check for empty input, must have at least one digit
+        char *startptr = buf;
+        while (isspace((unsigned char)*startptr)) startptr++; // skip starting space
+        if (*startptr == '\0') {
+            printf("Invalid input: only whitespace detected.\n");
+            continue;
+        }
+
         // check if first char of input is '?'
-        if (buf[0] == '?') {
+        if (*startptr == '?') {
+            startptr++; // skip '?'
+            while (isspace((unsigned char)*startptr)) startptr++; // skip ending space
+            if (*startptr != '\0') { // if extra chars after '?'
+                if (DEBUG) printf("[Debug] Extra chars after '?': '%s'\n", startptr);
+                printf("Invalid input. Please enter a numeric value or '?' for unknown variable.\n");
+                continue;
+            }
             *value = NAN;  // Use NaN to represent unknown variable
-            success = RETURN_OK;
             break;
         }
 
         // check if input is float
         char *endptr;
         errno = 0;
-        input = strtod(buf, &endptr);
-        if (errno == ERANGE || endptr == buf || (*endptr && *endptr != '\n')) {
-            printf("Invalid input. Please enter a numeric value or '?' for unknown variable.");
-            success = RETURN_ERROR;
+        input = strtod(startptr, &endptr);
+
+        while(*endptr != '\0' && isspace((unsigned char)*endptr)) endptr++; // skip ending space
+        if (DEBUG) printf("[Debug] input=%f, buf='%s', startptr='%s', endptr='%s', errno=%d\n", input, buf, startptr, endptr, errno);
+        if (errno == ERANGE || endptr == startptr || *endptr != '\0') {
+            printf("Invalid input. Please enter a numeric value or '?' for unknown variable.\n");
         } else {
             *value = input;
-            success = RETURN_OK;
+            break;
         }
-    } while (success != RETURN_OK);
+    } while (1);
 }
 
 int main() {
+    if (DEBUG) printf("[Debug] Enable debug output.\n");
     double Vo, Vi, K;
 
     printf("Buck Converter - CCM Duty Cycle Calculation\n");

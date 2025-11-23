@@ -8,6 +8,7 @@
 
 main.exe:
 	gcc main.c funcs.c -o main.exe -lm
+# 	gcc .\test\test_input_float.c -o test_input_float.exe -lm
 
 main.out:
 	gcc main.c funcs.c -o main.out -lm
