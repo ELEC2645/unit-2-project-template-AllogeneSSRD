@@ -9,30 +9,37 @@
 #define RETURN_EXIT 2   // User chose to exit
 #endif
 
-void input_float(double *value, char variable_name[32]);
+void input_float(double *value, const char * description);
 
-void input_float(double *value, char description[50])
+void input_float(double *value, const char * description)
 {
     double input;
-    while (1) {
+    char buf[128];
+    int success;
+    do {
         printf("\nPlease enter value of %s: ", description);
-        // check if input is float
-        if (scanf("%lf", &input) == 1) {
-            *value = input;
-            while (getchar() != '\n'); // Clear input buffer
-            break;
-        }
+        if (!fgets(buf, sizeof(buf), stdin))
+            printf("Input error. fgets()\n"),
+            success = RETURN_ERROR;
         // check if first char of input is '?'
-        char first_char = getchar();
-        if (first_char == '?') {
+        if (buf[0] == '?') {
             *value = NAN;  // Use NaN to represent unknown variable
-            while (getchar() != '\n');
+            success = RETURN_OK;
             break;
-        } else {
-            printf("Invalid input. Please enter a numeric value or '?' for unknown variable.");
-            while (getchar() != '\n');
         }
-    }
+
+        // check if input is float
+        char *endptr;
+        errno = 0;
+        input = strtod(buf, &endptr);
+        if (errno == ERANGE || endptr == buf || (*endptr && *endptr != '\n')) {
+            printf("Invalid input. Please enter a numeric value or '?' for unknown variable.");
+            success = RETURN_ERROR;
+        } else {
+            *value = input;
+            success = RETURN_OK;
+        }
+    } while (success != RETURN_OK);
 }
 
 int main() {

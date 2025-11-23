@@ -6,9 +6,11 @@
 
 # the -lm at the end links the math library
 
+main.exe:
+	gcc main.c funcs.c -o main.exe -lm
+
 main.out:
 	gcc main.c funcs.c -o main.out -lm
-# 	gcc main.c funcs.c -o main.exe -lm
 
 clean:
 	-rm main.out
