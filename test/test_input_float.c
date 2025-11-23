@@ -1,11 +1,7 @@
-// Auther: Xiangcheng Tao
-// Student ID: 202013365
-// Filename: funcs.c
-// Create date: 2025-11-19
-
 #include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
 #include <math.h>
-#include "funcs.h"
 
 #ifndef RETURN_OK
 #define RETURN_OK 0   // Normal return
@@ -13,17 +9,16 @@
 #define RETURN_EXIT 2   // User chose to exit
 #endif
 
-void input_float(double *value, const char * description);
+void input_float(double *value, char variable_name[32]);
 
-void input_float(double *value, const char * description)
+void input_float(double *value, char description[50])
 {
-    // TODO: https://eee-elec2645.github.io/docs/menus/user_input.html
-    double buf;
+    double input;
     while (1) {
         printf("\nPlease enter value of %s: ", description);
         // check if input is float
-        if (scanf("%lf", &buf) == 1) {
-            *value = buf;
+        if (scanf("%lf", &input) == 1) {
+            *value = input;
             while (getchar() != '\n'); // Clear input buffer
             break;
         }
@@ -40,14 +35,13 @@ void input_float(double *value, const char * description)
     }
 }
 
-void buck_ccm_duty_cycle(void)
-{
+int main() {
     double Vo, Vi, K;
-    printf("\n>> Buck Converter - CCM Mode\n"
-           "Formula (Duty cycle): K = Vo / Vi\n"
-           "Variables: Vo (Output Voltage), Vi (Input Voltage), K (Duty Cycle)\n"
-           "Provide any two values to calculate the other.\n"
-           "Enter '?' for the unknown variable.\n");
+
+    printf("Buck Converter - CCM Duty Cycle Calculation\n");
+    printf("Formula: K = Vo / Vi\n"
+           "(type '?' for unknown variable to calculate)\n");
+
     // Input values
     input_float(&Vo, "Output Voltage (Vo)");
     input_float(&Vi, "Input Voltage (Vi)");
@@ -66,22 +60,6 @@ void buck_ccm_duty_cycle(void)
     } else {
         printf("All variables provided. No calculation needed.\n");
     }
-}
 
-void menu_item_2(void) {
-    printf("\n>> Buck Converter - DCM\n");
-    printf("\nSome code here does something useful\n");
-    /* you can call a function from here that handles menu 2 */
-}
-
-void menu_item_3(void) {
-    printf("\n>> Boost Converter - CCM\n");
-    printf("\nSome code here does something useful\n");
-    /* you can call a function from here that handles menu 3 */
-}
-
-void menu_item_4(void) {
-    printf("\n>> Boost Converter - DCM\n");
-    printf("\nSome code here does something useful\n");
-    /* you can call a function from here that handles menu 4 */
+    return 0;
 }

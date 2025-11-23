@@ -11,10 +11,11 @@
 #include <math.h>
 #include "funcs.h"
 
+#ifndef RETURN_OK
 #define RETURN_OK 0   // Normal return
 #define RETURN_ERROR 1   // Wrong input or error
 #define RETURN_EXIT 2   // User chose to exit
-
+#endif
 
 /* Prototypes mirroring the C++ version */
 // main menu
