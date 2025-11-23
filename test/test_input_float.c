@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <math.h>
+#include <string.h>
 
 #ifndef RETURN_OK
 #define RETURN_OK 0   // Normal return
@@ -18,9 +19,12 @@ void input_float(double *value, const char * description)
     int success;
     do {
         printf("\nPlease enter value of %s: ", description);
-        if (!fgets(buf, sizeof(buf), stdin))
-            printf("Input error. fgets()\n"),
+        if (!fgets(buf, sizeof(buf), stdin)) {
+            printf("Input error. fgets()\n");
             success = RETURN_ERROR;
+        }
+        buf[strcspn(buf, "\r\n")] = '\0'; // strip trailing newline
+
         // check if first char of input is '?'
         if (buf[0] == '?') {
             *value = NAN;  // Use NaN to represent unknown variable
