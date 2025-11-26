@@ -17,13 +17,15 @@ void input_float(double *value, const char * description)
     do {
         printf("\nPlease enter value of %s: ", description);
         if (!fgets(buf, sizeof(buf), stdin)) {
-            if (DEBUG) printf("[Debug] Input error. fgets()\n");
+            puts("\nInput error. Exiting.");
+            exit(1);
         }
         buf[strcspn(buf, "\r\n")] = '\0'; // strip trailing newline
 
-        // check for empty input, must have at least one digit
+        // skip starting space
         char *startptr = buf;
-        while (isspace((unsigned char)*startptr)) startptr++; // skip starting space
+        while (isspace((unsigned char)*startptr)) startptr++;
+        // check for empty input, must have at least one digit
         if (*startptr == '\0') {
             printf("Invalid input: only whitespace detected.\n");
             continue;
@@ -43,12 +45,14 @@ void input_float(double *value, const char * description)
         }
 
         // check if input is float
+        // Reference: https://eee-elec2645.github.io/docs/menus/user_input.html
         char *endptr;
         errno = 0;
         input = strtod(startptr, &endptr);
-
-        while(*endptr != '\0' && isspace((unsigned char)*endptr)) endptr++; // skip ending space
-        if (DEBUG) printf("[Debug] input=%f, buf='%s', startptr='%s', endptr='%s', errno=%d\n", input, buf, startptr, endptr, errno);
+        // skip ending space
+        while(*endptr != '\0' && isspace((unsigned char)*endptr)) endptr++;
+        if (DEBUG) printf("[Debug] input=%f, buf='%s', startptr='%s', endptr='%s', errno=%d\n",
+                            input, buf, startptr, endptr, errno);
         if (errno == ERANGE || endptr == startptr || *endptr != '\0') {
             printf("Invalid input. Please enter a numeric value or '?' for unknown variable.\n");
         } else {

@@ -112,10 +112,12 @@ static void print_main_menu(void)
     printf("\n"
            "\t\t\t\t\t\t\n"
            "\t1. Buck Converter - CCM\t\t\n"
-           "\t2. Buck Converter - DCM\t\t\n"
-           "\t3. Boost Converter - CCM\t\t\n"
-           "\t4. Boost Converter - DCM\t\t\n"
-           "\t5. Exit\t\t\t\t\n"
+           "\t2. Buck Converter - Constant input voltage\t\t\n"
+           "\t3. Buck Converter - Constant output voltage\t\t\n"
+           "\t4. Boost Converter - CCM\t\t\n"
+           "\t5. Boost Converter - Constant input voltage\t\t\n"
+           "\t6. Boost Converter - Constant output voltage\t\t\n"
+           "\t7. Exit\t\t\t\t\n"
            "\t\t\t\t\t\t\n");
     printf("-----------------------------------\n");
 }

@@ -42,6 +42,7 @@
 
 # Personal Journal write by markdown
 personal_journal_*.md
+docs/*
 docs/*.md
 docs/*.pdf
 docs/*.docx
