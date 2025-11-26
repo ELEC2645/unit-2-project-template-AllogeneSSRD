@@ -113,7 +113,8 @@ void buck_ccm_inductor_Iripple(void)
     // Input values
     input_float(&Vo, "Output Voltage (Vo: V)");
     input_float(&K,  "Duty Cycle (K)");
-    input_float(&L,  "Inductance (L: H)");
+    input_float(&L,  "Inductance (L: mH)");
+    L /= 1e3; // convert to H
     input_float(&f_s, "Switching Frequency (f_s: Hz)");
     input_float(&delta_i, "Current Ripple (Delta i: A)");
     // Determine if more than one variable is unknown
@@ -135,8 +136,8 @@ void buck_ccm_inductor_Iripple(void)
         K = 1 - (delta_i * f_s * L) / Vo;
         printf("Calculated Duty Cycle: K = 1 - (Delta i * f_s * L) / Vo: %.4f\n", K);
     } else if (isnan(L)) {
-        L = ((1 - K) * Vo) / (f_s * delta_i);
-        printf("Calculated Inductance: L = ((1 - K) * Vo) / (f_s * Delta i): %.4f H\n", L);
+        L = ((1 - K) * Vo) / (f_s * delta_i) * 1e3; // convert to mH
+        printf("Calculated Inductance: L = ((1 - K) * Vo) / (f_s * Delta i): %.4f mH\n", L);
     } else if (isnan(f_s)) {
         f_s = ((1 - K) * Vo) / (L * delta_i);
         printf("Calculated Switching Frequency: f_s = ((1 - K) * Vo) / (L * Delta i): %.4f Hz\n", f_s);
@@ -156,8 +157,10 @@ void buck_ccm_capacitor_Vripple(void)
     // Input values
     input_float(&Vo, "Output Voltage (Vo: V)");
     input_float(&K,  "Duty Cycle (K)");
-    input_float(&C,  "Capacitance (C: F)");
-    input_float(&L,  "Inductance (L: H)");
+    input_float(&C,  "Capacitance (C: uF)");
+    C /= 1e6; // convert to F
+    input_float(&L,  "Inductance (L: mH)");
+    L /= 1e3; // convert to H
     input_float(&f_s, "Switching Frequency (f_s: Hz)");
     input_float(&delta_v, "Voltage Ripple (Delta v: V)");
     // Determine if more than one variable is unknown
@@ -179,11 +182,11 @@ void buck_ccm_capacitor_Vripple(void)
         K = 1 - (delta_v * 8 * f_s * f_s * C * L) / Vo;
         printf("Calculated Duty Cycle: K = 1 - (Delta v * 8 * f_s^2 * C * L) / Vo: %.4f\n", K);
     } else if (isnan(C)) {
-        C = ((1 - K) * Vo) / (delta_v * 8 * f_s * f_s * L);
-        printf("Calculated Capacitance: C = ((1 - K) * Vo) / (Delta v * 8 * f_s^2 * L): %.4f F\n", C);
+        C = ((1 - K) * Vo) / (delta_v * 8 * f_s * f_s * L) * 1e6; // convert to uF
+        printf("Calculated Capacitance: C = ((1 - K) * Vo) / (Delta v * 8 * f_s^2 * L): %.4f uF\n", C);
     }else if (isnan(L)) {
-        L = ((1 - K) * Vo) / (delta_v * 8 * f_s * f_s * C);
-        printf("Calculated Inductance: L = ((1 - K) * Vo) / (Delta v * 8 * f_s^2 * C): %.4f H\n", L);
+        L = ((1 - K) * Vo) / (delta_v * 8 * f_s * f_s * C) * 1e3; // convert to mH
+        printf("Calculated Inductance: L = ((1 - K) * Vo) / (Delta v * 8 * f_s^2 * C): %.4f mH\n", L);
     } else if (isnan(f_s)) {
         f_s = ((1 - K) * Vo) / (8 * C * delta_v);
         printf("Calculated Switching Frequency: f_s = ((1 - K) * Vo) / (8 * C * Delta v): %.4f Hz\n", f_s);
