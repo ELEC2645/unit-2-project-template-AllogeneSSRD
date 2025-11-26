@@ -32,13 +32,16 @@ static void sub_menu_buck_ccm(void);
 static void print_sub_menu_buck_ccm(void);
 static int select_sub_menu_buck_ccm(int input);
 // Buck Converter - Constant input voltage
-static void sub_menu_constant_vi(void);
-static void print_sub_menu_constant_vi(void);
-static int select_sub_menu_constant_vi(int input);
+static void sub_menu_buck_dcm(void);
+static void print_sub_menu_buck_dcm(void);
+static int select_sub_menu_buck_dcm(int input);
+// Buck Converter - Constant output voltage
+
+
 // go back to sub menu
 static int go_back_to_sub_menu(void);
 // input handling
-static int  get_user_input(void);       /* get a valid integer menu choice */
+static int  get_user_input(int items);       /* get a valid integer menu choice */
 static int  is_integer(const char *s);  /* validate integer string */
 
 int main(void)
@@ -55,14 +58,15 @@ static void main_menu(void)
 {
     print_main_menu();
     {
-        int input = get_user_input();
+        int input = get_user_input(7); // number of menu items
         select_menu_item(input);
     }
 }
 
-static int get_user_input(void)
+static int get_user_input(int items)
 {
-    enum { MENU_ITEMS = 7 };   /* 1..6 = items, 7 = Exit */
+    const int MENU_ITEMS = items;
+    // enum { MENU_ITEMS = it};   /* 1..6 = items, 7 = Exit */
     char buf[128];
     int valid_input = 0;
     int value = 0;
@@ -102,10 +106,10 @@ static void select_menu_item(int input)
             sub_menu_buck_ccm();
             break;
         case 2:
-            sub_menu_constant_vi();
+            sub_menu_buck_dcm();
             break;
         // case 3:
-        //     menu_item_3();
+        //     sub_menu_constant_vo();
         //     break;
         // case 4:
         //     menu_item_4();
@@ -138,7 +142,7 @@ static void sub_menu_buck_ccm(void)
     for(;;) {
         print_sub_menu_buck_ccm();
         {
-            int input = get_user_input();
+            int input = get_user_input(5);
             if (select_sub_menu_buck_ccm(input) == RETURN_EXIT) {
                 printf("\nReturning to Main Menu...\n");
                 // Exit sub menu, return to main menu
@@ -175,8 +179,7 @@ static int select_sub_menu_buck_ccm(int input)
             buck_ccm_inductor_Iripple();
             return go_back_to_sub_menu();
         case 3:
-            // buck_ccm_capacitor_Vripple();
-            buck_ccm_duty_cycle();
+            buck_ccm_capacitor_Vripple();
             return go_back_to_sub_menu();
         case 5:
             exit(0);
@@ -186,13 +189,13 @@ static int select_sub_menu_buck_ccm(int input)
     }
 }
 
-static void sub_menu_constant_vi(void)
+static void sub_menu_buck_dcm(void)
 {
     for(;;) {
-        print_sub_menu_constant_vi();
+        print_sub_menu_buck_dcm();
         {
-            int input = get_user_input();
-            if (select_sub_menu_constant_vi(input) == RETURN_EXIT) {
+            int input = get_user_input(5);
+            if (select_sub_menu_buck_dcm(input) == RETURN_EXIT) {
                 printf("\nReturning to Main Menu...\n");
                 // Exit sub menu, return to main menu
                 break;
@@ -202,37 +205,36 @@ static void sub_menu_constant_vi(void)
     }
 }
 
-static void print_sub_menu_constant_vi(void)
+static void print_sub_menu_buck_dcm(void)
 {
-    printf("\n---------- Buck Converter - CCM ----------\n");
+    printf("\n---------- Buck Converter - DCM ----------\n");
     printf("\n"
            "\tChoice a formula to calculate.\n"
            "\t1. Duty cycle K\t\t\n"
-           "\t2. Inductor & Current Ripple\t\t\n"
-           "\t3. Capacitor & Voltage Ripple\t\t\n"
+           "\t2. Boundary when constant input voltage\t\t\n"
+           "\t3. Boundary when constant output voltage\t\t\n"
            "\t4. Back to Main Menu\t\t\n"
            "\t5. Exit\t\t\t\t\n"
            "\t\t\t\t\t\t\n");
     printf("--------------------------------------------\n");
 }
 
-static int select_sub_menu_constant_vi(int input)
+static int select_sub_menu_buck_dcm(int input)
 {
     switch (input) {
         case 1:
-            buck_ccm_duty_cycle();
+            buck_dcm_duty_cycle();
             return go_back_to_sub_menu();
-            // return 0 for error
-            // return 1 for success
         case 2:
-            // buck_constant_Vi();
+            buck_dcm_boundary_constant_vi();
             return go_back_to_sub_menu();
         case 3:
-            // buck_constant_Vo();
+            buck_dcm_boundary_constant_vo();
             return go_back_to_sub_menu();
+        case 5:
+            exit(0);
         default:
             return RETURN_EXIT;
-            // return 2; back to main menu
     }
 }
 

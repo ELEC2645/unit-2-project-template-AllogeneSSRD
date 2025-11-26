@@ -102,7 +102,8 @@ void buck_ccm_duty_cycle(void)
     }
 }
 
-void buck_ccm_inductor_Iripple(void) {
+void buck_ccm_inductor_Iripple(void)
+{
     double Vo = NAN, K = NAN, L = NAN, f_s = NAN, delta_i = NAN;
     printf("\n>> Buck Converter - CCM Mode\n"
           "\nFormula: Delta i = ((1 - K) * Vo) / (f_s * L)\n"
@@ -123,7 +124,7 @@ void buck_ccm_inductor_Iripple(void) {
                isnan(Vo), isnan(K), isnan(L), isnan(f_s), isnan(delta_i));
         // return;
     }
-     // Determine which variable to calculate
+    // Determine which variable to calculate
     if (isnan(delta_i)) {
         delta_i = ((1 - K) * Vo) / (f_s * L);
         printf("Calculated Current Ripple: Delta i = ((1 - K) * Vo) / (f_s * L): %.4f A\n", delta_i);
@@ -142,17 +143,68 @@ void buck_ccm_inductor_Iripple(void) {
     } else {
         printf("All variables provided. No calculation needed.\n");
     }
-
-
 }
 
-void buck_ccm_capacitor_Vripple(void) {
-    printf("\n>> Buck Converter - CCM Mode\n");
+void buck_ccm_capacitor_Vripple(void)
+{
+    double Vo = NAN, K = NAN, C = NAN, L = NAN, f_s = NAN, delta_v = NAN;
+    printf("\n>> Buck Converter - CCM Mode\n"
+          "\nFormula: Delta v = ((1 - K) * Vo) / (8 * f_s^2 * C * L)\n"
+           "Variables: Vo (Output Voltage), K (Duty Cycle), L (Inductance), f_s (Switching Frequency), Delta i (Current Ripple)\n"
+           "Provide any 4 values to calculate the other.\n"
+           "Enter '?' for the unknown variable.\n");
+    // Input values
+    input_float(&Vo, "Output Voltage (Vo: V)");
+    input_float(&K,  "Duty Cycle (K)");
+    input_float(&C,  "Capacitance (C: F)");
+    input_float(&L,  "Inductance (L: H)");
+    input_float(&f_s, "Switching Frequency (f_s: Hz)");
+    input_float(&delta_v, "Voltage Ripple (Delta v: V)");
+    // Determine if more than one variable is unknown
+    if ((isnan(Vo)+ isnan(K)+ isnan(C)+ isnan(L)+ isnan(f_s)+ isnan(delta_v)) != -1) {
+        printf("Error: Please provide exactly four known values and one unknown value.\n");
+        if (DEBUG) printf("[Debug] all=%d, Vo isnan=%d, K isnan=%d, C isnan=%d, L isnan=%d, f_s isnan=%d, delta_v isnan=%d\n",
+            (isnan(Vo)+ isnan(K)+ isnan(C)+ isnan(L)+ isnan(f_s)+ isnan(delta_v)),
+               isnan(Vo), isnan(K), isnan(C), isnan(L), isnan(f_s), isnan(delta_v));
+        // return;
+    }
+    // Determine which variable to calculate
+    if (isnan(delta_v)) {
+        delta_v = ((1 - K) * Vo) / (8 * f_s * f_s * C * L);
+        printf("Calculated Voltage Ripple: Delta v = ((1 - K) * Vo) / (8 * f_s^2 * C * L): %.4f V\n", delta_v);
+    } else if (isnan(Vo)) {
+        Vo = (delta_v * 8 * f_s * f_s * C * L) / (1 - K);
+        printf("Calculated Output Voltage: Vo = (Delta v * 8 * f_s^2 * C * L) / (1 - K): %.4f V\n", Vo);
+    } else if (isnan(K)) {
+        K = 1 - (delta_v * 8 * f_s * f_s * C * L) / Vo;
+        printf("Calculated Duty Cycle: K = 1 - (Delta v * 8 * f_s^2 * C * L) / Vo: %.4f\n", K);
+    } else if (isnan(C)) {
+        C = ((1 - K) * Vo) / (delta_v * 8 * f_s * f_s * L);
+        printf("Calculated Capacitance: C = ((1 - K) * Vo) / (Delta v * 8 * f_s^2 * L): %.4f F\n", C);
+    }else if (isnan(L)) {
+        L = ((1 - K) * Vo) / (delta_v * 8 * f_s * f_s * C);
+        printf("Calculated Inductance: L = ((1 - K) * Vo) / (Delta v * 8 * f_s^2 * C): %.4f H\n", L);
+    } else if (isnan(f_s)) {
+        f_s = ((1 - K) * Vo) / (8 * C * delta_v);
+        printf("Calculated Switching Frequency: f_s = ((1 - K) * Vo) / (8 * C * Delta v): %.4f Hz\n", f_s);
+    } else {
+        printf("All variables provided. No calculation needed.\n");
+    }
+}
+
+void buck_dcm_duty_cycle(void) {
+    printf("\n>> Boost Converter - DCM\n");
     printf("\nSome code here does something useful\n");
-    /* you can call a function from here that handles menu 3 */
+    /* you can call a function from here that handles menu 4 */
 }
 
-void buck_(void) {
+void buck_dcm_boundary_constant_vi(void) {
+    printf("\n>> Boost Converter - DCM\n");
+    printf("\nSome code here does something useful\n");
+    /* you can call a function from here that handles menu 4 */
+}
+
+void buck_dcm_boundary_constant_vo(void) {
     printf("\n>> Boost Converter - DCM\n");
     printf("\nSome code here does something useful\n");
     /* you can call a function from here that handles menu 4 */

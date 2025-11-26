@@ -9,6 +9,8 @@
 void buck_ccm_duty_cycle(void);
 void buck_ccm_inductor_Iripple(void);
 void buck_ccm_capacitor_Vripple(void);
-void buck_(void);
+void buck_dcm_duty_cycle(void);
+void buck_dcm_boundary_constant_vi(void);
+void buck_dcm_boundary_constant_vo(void);
 
 #endif
