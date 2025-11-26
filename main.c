@@ -17,15 +17,25 @@
 #define RETURN_EXIT 2   // User chose to exit
 #endif
 
+#ifndef DEBUG
+#define DEBUG 1  // Set to 1 to enable debug output
+#endif
+
 /* Prototypes mirroring the C++ version */
 // main menu
 static void main_menu(void);            // runs in the main loop
 static void print_main_menu(void);      // output the main menu description
 static void select_menu_item(int input); // run code based on user's choice
 // sub menu
+// Buck Converter - CCM
 static void sub_menu_buck_ccm(void);
 static void print_sub_menu_buck_ccm(void);
 static int select_sub_menu_buck_ccm(int input);
+// Buck Converter - Constant input voltage
+static void sub_menu_constant_vi(void);
+static void print_sub_menu_constant_vi(void);
+static int select_sub_menu_constant_vi(int input);
+// go back to sub menu
 static int go_back_to_sub_menu(void);
 // input handling
 static int  get_user_input(void);       /* get a valid integer menu choice */
@@ -52,7 +62,7 @@ static void main_menu(void)
 
 static int get_user_input(void)
 {
-    enum { MENU_ITEMS = 5 };   /* 1..4 = items, 5 = Exit */
+    enum { MENU_ITEMS = 7 };   /* 1..6 = items, 7 = Exit */
     char buf[128];
     int valid_input = 0;
     int value = 0;
@@ -92,14 +102,14 @@ static void select_menu_item(int input)
             sub_menu_buck_ccm();
             break;
         case 2:
-            menu_item_2();
+            sub_menu_constant_vi();
             break;
-        case 3:
-            menu_item_3();
-            break;
-        case 4:
-            menu_item_4();
-            break;
+        // case 3:
+        //     menu_item_3();
+        //     break;
+        // case 4:
+        //     menu_item_4();
+        //     break;
         default:
             printf("Bye!\n");
             exit(0);
@@ -144,9 +154,11 @@ static void print_sub_menu_buck_ccm(void)
     printf("\n---------- Buck Converter - CCM ----------\n");
     printf("\n"
            "\tChoice a formula to calculate.\n"
-           "\t1. Duty cycle: K = Vo / Vi\t\t\n"
-           "\t2. Sub Item 2\t\t\n"
-           "\t3. Back to Main Menu\t\t\n"
+           "\t1. Duty cycle K\t\t\n"
+           "\t2. Inductor & Current Ripple\t\t\n"
+           "\t3. Capacitor & Voltage Ripple\t\t\n"
+           "\t4. Back to Main Menu\t\t\n"
+           "\t5. Exit\t\t\t\t\n"
            "\t\t\t\t\t\t\n");
     printf("--------------------------------------------\n");
 }
@@ -159,11 +171,65 @@ static int select_sub_menu_buck_ccm(int input)
             return go_back_to_sub_menu();
             // return 0 for error
             // return 1 for success
-
         case 2:
-            menu_item_2();
+            buck_ccm_inductor_Iripple();
             return go_back_to_sub_menu();
+        case 3:
+            // buck_ccm_capacitor_Vripple();
+            buck_ccm_duty_cycle();
+            return go_back_to_sub_menu();
+        case 5:
+            exit(0);
+        default:
+            return RETURN_EXIT;
+            // return 2; back to main menu
+    }
+}
 
+static void sub_menu_constant_vi(void)
+{
+    for(;;) {
+        print_sub_menu_constant_vi();
+        {
+            int input = get_user_input();
+            if (select_sub_menu_constant_vi(input) == RETURN_EXIT) {
+                printf("\nReturning to Main Menu...\n");
+                // Exit sub menu, return to main menu
+                break;
+            }
+            printf("\nReturn Sub Menu \n");
+        }
+    }
+}
+
+static void print_sub_menu_constant_vi(void)
+{
+    printf("\n---------- Buck Converter - CCM ----------\n");
+    printf("\n"
+           "\tChoice a formula to calculate.\n"
+           "\t1. Duty cycle K\t\t\n"
+           "\t2. Inductor & Current Ripple\t\t\n"
+           "\t3. Capacitor & Voltage Ripple\t\t\n"
+           "\t4. Back to Main Menu\t\t\n"
+           "\t5. Exit\t\t\t\t\n"
+           "\t\t\t\t\t\t\n");
+    printf("--------------------------------------------\n");
+}
+
+static int select_sub_menu_constant_vi(int input)
+{
+    switch (input) {
+        case 1:
+            buck_ccm_duty_cycle();
+            return go_back_to_sub_menu();
+            // return 0 for error
+            // return 1 for success
+        case 2:
+            // buck_constant_Vi();
+            return go_back_to_sub_menu();
+        case 3:
+            // buck_constant_Vo();
+            return go_back_to_sub_menu();
         default:
             return RETURN_EXIT;
             // return 2; back to main menu

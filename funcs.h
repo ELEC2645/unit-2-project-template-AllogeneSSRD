@@ -7,8 +7,8 @@
 #define FUNCS_H
 
 void buck_ccm_duty_cycle(void);
-void menu_item_2(void);
-void menu_item_3(void);
-void menu_item_4(void);
+void buck_ccm_inductor_Iripple(void);
+void buck_ccm_capacitor_Vripple(void);
+void buck_(void);
 
 #endif
