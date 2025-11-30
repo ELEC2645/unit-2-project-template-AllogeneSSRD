@@ -42,12 +42,14 @@
 
 # Personal Journal write by markdown
 personal_journal_*.md
-docs/*
+# docs/*
 docs/*.md
 docs/*.pdf
 docs/*.docx
 docs/*/*.png
+docs/*.drawio
 # !README.md
+!docs/attachments/*.jpg
 
 # Temporary files
 *.zip
