@@ -70,18 +70,14 @@ Sub menu displays the formulas available for each mode.
 
 **Example:** Buck Converter - CCM mode
 
-Duty Cycle: 
-$$
-K = \frac {Vo}{Vi}
-$$
+Duty Cycle $K = \frac{V_o}{V_i}$: 
+![](docs/attachments/buck_ccm_duty_cycle_K.jpg)
+
 Current Ripple: 
-$$
-\Delta i = \frac{(1-K)\cdot V_o}{f_s\cdot L}
-$$
+![](docs/attachments/buck_ccm_inductor_Iripple_Δi.jpg)
+
 Voltage Ripple:
-$$
-\Delta v_o = \frac{(1-K)\cdot V_o}{8{f_s}^2 \cdot C \cdot L}
-$$
+![](docs/attachments/buck_ccm_capacitor_Δvo.jpg)
 
 ```bash
 ---------- Buck Converter - CCM ----------
