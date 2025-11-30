@@ -65,8 +65,38 @@ Main menu will show upon launching, select your converter topology and operating
 -----------------------------------
 ```
 
+### 2. Sub Menu
+Sub menu displays the formulas available for each mode.
 
-### 2. Calculation
+**Example:** Buck Converter - CCM mode
+
+Duty Cycle: 
+$$
+K = \frac {Vo}{Vi}
+$$
+Current Ripple: 
+$$
+\Delta i = \frac{(1-K)\cdot V_o}{f_s\cdot L}
+$$
+Voltage Ripple:
+$$
+\Delta v_o = \frac{(1-K)\cdot V_o}{8{f_s}^2 \cdot C \cdot L}
+$$
+
+```bash
+---------- Buck Converter - CCM ----------
+
+        Choice a formula to calculate.
+        1. Duty cycle K
+        2. Inductor & Current Ripple
+        3. Capacitor & Voltage Ripple
+        4. Back to Main Menu
+        5. Exit
+
+--------------------------------------------
+```
+
+### 3. Calculation
 The tool allows you to calculate any variable in a formula by entering `?`.
 
 **Example:** Calculating Input Voltage ($V_i$) for a Buck Converter.
