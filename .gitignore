@@ -48,3 +48,9 @@ docs/*.pdf
 docs/*.docx
 docs/*/*.png
 # !README.md
+
+# Temporary files
+*.zip
+input.txt
+output.txt
+*.log
