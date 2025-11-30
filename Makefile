@@ -18,3 +18,10 @@ clean:
 
 test: clean main.out
 	bash test.sh
+
+test_funcs:
+	gcc -o test_funcs test/test_funcs.c test/cutest/CuTest.c funcs.c -lm
+# windows
+	.\test_funcs.exe
+# linux
+# 	./test_funcs.exe
