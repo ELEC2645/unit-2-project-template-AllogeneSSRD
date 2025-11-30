@@ -195,10 +195,41 @@ void buck_ccm_capacitor_Vripple(void)
     }
 }
 
-void buck_dcm_duty_cycle(void) {
-    printf("\n>> Boost Converter - DCM\n");
-    printf("\nSome code here does something useful\n");
-    /* you can call a function from here that handles menu 4 */
+void buck_dcm_duty_cycle(void)
+{
+    double Vo, Vi, K, delta_1;
+    printf("\n>> Boost Converter - DCM\n"
+          "\nFormula: Vo / Vi = K / (K + Delta 1)\n"
+           "Variables: Vo (Output Voltage), Vi (Input Voltage), K (Duty Cycle), Delta 1 (Close time)\n"
+           "Provide any 3 values to calculate the other.\n"
+           "Enter '?' for the unknown variable.\n");
+    // Input values
+    input_float(&Vo, "Output Voltage (Vo: V)");
+    input_float(&Vi, "Input Voltage (Vi: V)");
+    input_float(&K,  "Duty Cycle (K)");
+    input_float(&delta_1, "Close time (Delta 1)");
+    // Determine if more than one variable is unknown
+    if ((isnan(Vo)+ isnan(Vi)+ isnan(K)+ isnan(delta_1)) != -1) {
+        printf("Error: Please provide exactly three known values and one unknown value.\n");
+        return;
+    }
+    // Determine which variable to calculate
+    if (isnan(Vo)) { // Vo = \frac{K V_{i}}{\Delta_{i} + K}
+        Vo = Vi * K / (K + delta_1);
+        printf("Calculated Output Voltage (Vo = Vi * K / (K + Delta 1)): %.4f V\n", Vo);
+    } else if (isnan(Vi)) { // Vi = \frac{V_{o} (K + \Delta_{i})}{K}
+        Vi = Vo * (K + delta_1) / K;
+        printf("Calculated Input Voltage (Vi = Vo * (K + Delta 1) / K): %.4f V\n", Vi);
+    } else if (isnan(K)) { // K = \frac{\Delta_{i} V_{o}}{V_{i} - V_{o}}
+        K = (Vo * delta_1) / (Vi - Vo);
+        printf("Calculated Duty Cycle (K = (Vo * Delta 1) / (Vi - Vo)): %.4f\n", K);
+    } else if (isnan(delta_1)) { // Delta_i = \frac{K \left(V_{i} - V_{o}\right)}{V_{o}}
+        delta_1 = (K * (Vi - Vo)) / Vo;
+        printf("Calculated Close time (Delta 1 = (K * (Vi - Vo)) / Vo): %.4f\n", delta_1);
+    } else {
+        printf("All variables provided. No calculation needed.\n");
+    }
+
 }
 
 void buck_dcm_boundary_constant_vi(void) {

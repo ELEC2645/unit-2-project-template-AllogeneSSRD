@@ -31,12 +31,10 @@ static void select_menu_item(int input); // run code based on user's choice
 static void sub_menu_buck_ccm(void);
 static void print_sub_menu_buck_ccm(void);
 static int select_sub_menu_buck_ccm(int input);
-// Buck Converter - Constant input voltage
+// Buck Converter - DCM
 static void sub_menu_buck_dcm(void);
 static void print_sub_menu_buck_dcm(void);
 static int select_sub_menu_buck_dcm(int input);
-// Buck Converter - Constant output voltage
-
 
 // go back to sub menu
 static int go_back_to_sub_menu(void);
@@ -182,6 +180,7 @@ static int select_sub_menu_buck_ccm(int input)
             buck_ccm_capacitor_Vripple();
             return go_back_to_sub_menu();
         case 5:
+            printf("Bye!\n");
             exit(0);
         default:
             return RETURN_EXIT;
@@ -232,6 +231,7 @@ static int select_sub_menu_buck_dcm(int input)
             buck_dcm_boundary_constant_vo();
             return go_back_to_sub_menu();
         case 5:
+            printf("Bye!\n");
             exit(0);
         default:
             return RETURN_EXIT;
