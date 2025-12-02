@@ -1,6 +1,5 @@
 // ELEC2645 Unit 2 Project
 // Auther: Xiangcheng Tao
-// Student ID: 202013365
 // Filename: main.c
 // Create date: 2025-11-19
 
@@ -35,6 +34,14 @@ static int select_sub_menu_buck_ccm(int input);
 static void sub_menu_buck_dcm(void);
 static void print_sub_menu_buck_dcm(void);
 static int select_sub_menu_buck_dcm(int input);
+// Boost Converter - CCM
+static void sub_menu_boost_ccm(void);
+static void print_sub_menu_boost_ccm(void);
+static int select_sub_menu_boost_ccm(int input);
+// Boost Converter - DCM
+static void sub_menu_boost_dcm(void);
+static void print_sub_menu_boost_dcm(void);
+static int select_sub_menu_boost_dcm(int input);
 
 // go back to sub menu
 static int go_back_to_sub_menu(void);
@@ -44,6 +51,10 @@ static int  is_integer(const char *s);  /* validate integer string */
 
 int main(void)
 {
+    printf("DC-DC Converter Calculator\n"
+           "Auther: Xiangcheng Tao\n"
+           "\n"
+    );
     /* this will run forever until we call exit(0) in select_menu_item() */
     for(;;) {
         main_menu();
@@ -106,12 +117,12 @@ static void select_menu_item(int input)
         case 2:
             sub_menu_buck_dcm();
             break;
-        // case 3:
-        //     sub_menu_constant_vo();
-        //     break;
-        // case 4:
-        //     menu_item_4();
-        //     break;
+        case 3:
+            sub_menu_boost_ccm();
+            break;
+        case 4:
+            sub_menu_boost_dcm();
+            break;
         default:
             printf("Bye!\n");
             exit(0);
@@ -124,12 +135,10 @@ static void print_main_menu(void)
     printf("\n"
            "\t\t\t\t\t\t\n"
            "\t1. Buck Converter - CCM\t\t\n"
-           "\t2. Buck Converter - Constant input voltage\t\t\n"
-           "\t3. Buck Converter - Constant output voltage\t\t\n"
-           "\t4. Boost Converter - CCM\t\t\n"
-           "\t5. Boost Converter - Constant input voltage\t\t\n"
-           "\t6. Boost Converter - Constant output voltage\t\t\n"
-           "\t7. Exit\t\t\t\t\n"
+           "\t2. Buck Converter - DCM\t\t\n"
+           "\t3. Boost Converter - CCM\t\t\n"
+           "\t4. Boost Converter - DCM\t\t\n"
+           "\t5. Exit\t\t\t\t\n"
            "\t\t\t\t\t\t\n");
     printf("-----------------------------------\n");
 }
@@ -229,6 +238,109 @@ static int select_sub_menu_buck_dcm(int input)
             return go_back_to_sub_menu();
         case 3:
             buck_dcm_boundary_constant_vo();
+            return go_back_to_sub_menu();
+        case 5:
+            printf("Bye!\n");
+            exit(0);
+        default:
+            return RETURN_EXIT;
+    }
+}
+
+// Boost Converter - CCM
+
+static void sub_menu_boost_ccm(void)
+{
+    for(;;) {
+        print_sub_menu_boost_ccm();
+        {
+            int input = get_user_input(5);
+            if (select_sub_menu_boost_ccm(input) == RETURN_EXIT) {
+                printf("\nReturning to Main Menu...\n");
+                // Exit sub menu, return to main menu
+                break;
+            }
+            printf("\nReturn Sub Menu \n");
+        }
+    }
+}
+
+static void print_sub_menu_boost_ccm(void)
+{
+    printf("\n---------- Boost Converter - CCM ----------\n");
+    printf("\n"
+           "\tChoice a formula to calculate.\n"
+           "\t1. Duty cycle K\t\t\n"
+           "\t2. Inductor & Current Ripple\t\t\n"
+           "\t3. Capacitor & Voltage Ripple\t\t\n"
+           "\t4. Back to Main Menu\t\t\n"
+           "\t5. Exit\t\t\t\t\n"
+           "\t\t\t\t\t\t\n");
+    printf("--------------------------------------------\n");
+}
+
+static int select_sub_menu_boost_ccm(int input)
+{
+    switch (input) {
+        case 1:
+            boost_ccm_duty_cycle();
+            return go_back_to_sub_menu();
+        case 2:
+            boost_ccm_inductor_Iripple();
+            return go_back_to_sub_menu();
+        case 3:
+            boost_ccm_capacitor_Vripple();
+            return go_back_to_sub_menu();
+        case 5:
+            printf("Bye!\n");
+            exit(0);
+        default:
+            return RETURN_EXIT;
+    }
+}
+
+// Boost Converter - DCM
+
+static void sub_menu_boost_dcm(void)
+{
+    for(;;) {
+        print_sub_menu_boost_dcm();
+        {
+            int input = get_user_input(5);
+            if (select_sub_menu_boost_dcm(input) == RETURN_EXIT) {
+                printf("\nReturning to Main Menu...\n");
+                break;
+            }
+            printf("\nReturn Sub Menu \n");
+        }
+    }
+}
+
+static void print_sub_menu_boost_dcm(void)
+{
+    printf("\n---------- Boost Converter - DCM ----------\n");
+    printf("\n"
+           "\tChoice a formula to calculate.\n"
+           "\t1. Duty cycle K\t\t\n"
+           "\t2. Boundary when constant input voltage\t\t\n"
+           "\t3. Boundary when constant output voltage\t\t\n"
+           "\t4. Back to Main Menu\t\t\n"
+           "\t5. Exit\t\t\t\t\n"
+           "\t\t\t\t\t\t\n");
+    printf("--------------------------------------------\n");
+}
+
+static int select_sub_menu_boost_dcm(int input)
+{
+    switch (input) {
+        case 1:
+            boost_dcm_duty_cycle();
+            return go_back_to_sub_menu();
+        case 2:
+            boost_dcm_boundary_constant_vi();
+            return go_back_to_sub_menu();
+        case 3:
+            boost_dcm_boundary_constant_vo();
             return go_back_to_sub_menu();
         case 5:
             printf("Bye!\n");
