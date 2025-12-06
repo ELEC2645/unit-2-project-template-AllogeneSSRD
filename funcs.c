@@ -11,36 +11,82 @@
 #include <string.h>
 #include "funcs.h"
 
+#ifndef RETURN_OK
+#define RETURN_OK 0   // Normal return
+#define RETURN_ERROR 1   // Wrong input or error
+#define RETURN_EXIT 2   // User chose to exit
+#endif
+
 #ifndef DEBUG
-#define DEBUG 1  // Set to 1 to enable debug output
+#define DEBUG 0  // Set to 1 to enable debug output
 #endif
 
 #define TRUE 1
 #define FALSE 0
 
-void input_float(double *value, const char * description);
+#define DATA_FILE "converter.data"
 
-void input_float(double *value, const char * description)
+typedef struct
+{
+    double Vo;         // Output Voltage
+    double Vi;         // Input Voltage
+    double K;          // Duty Cycle
+    double R;          // Load Resistance
+    double L;          // Inductance
+    double C;          // Capacitance
+    double f_s;        // Switching Frequency
+    double Io;         // Output Current
+    double Delta_i;    // Current Ripple
+    double Delta_v;    // Voltage Ripple
+    double Delta_1;    // Close time
+} Converter_Params;
+
+
+void input_float(double *value, double *cache_value, const char * description);
+void output_float(const char *description, double value, const char *unit, int is_limited, double min, double max);
+int save_converter_params(const Converter_Params *params, const char *filename); // const for unchanged params in save
+int load_converter_params(Converter_Params *params, const char *filename);
+void init_converter_params(Converter_Params *params);
+
+void input_float(double *value, double *stored_value, const char * description)
 {
     double input;
     char buf[128];
 
     do {
-        printf("\nPlease enter value of %s: ", description);
+        // allow user to see stored value if exists
+        if (isnan(*stored_value)) printf("\nPlease enter value of %s: ", description);
+        else printf("\nPlease enter value of %s\nOr use stored value (%.4f) by 'r': ", description, *stored_value);
+
         if (!fgets(buf, sizeof(buf), stdin)) {
             puts("\nInput error. Exiting.");
             exit(1);
         }
         buf[strcspn(buf, "\r\n")] = '\0'; // strip trailing newline
 
-        // skip starting space
         char *startptr = buf;
-        while (isspace((unsigned char)*startptr)) startptr++;
+        while (isspace((unsigned char)*startptr)) startptr++; // skip starting space
         // check for empty input, must have at least one digit
         if (*startptr == '\0') {
             printf("Invalid input: only whitespace detected.\n");
             continue;
         }
+
+        // check for 'R' or 'r' to read from file
+        if (!isnan(*stored_value) && (*startptr == 'R' || *startptr == 'r')) {
+            startptr++; // skip 'R' or 'r'
+            while (isspace((unsigned char)*startptr)) startptr++; // skip ending space
+            if (*startptr != '\0') { // if extra chars after 'R' or 'r'
+                if (DEBUG) printf("[Debug] Extra chars after 'R'/'r': '%s'\n", startptr);
+                printf("Invalid input. Please enter a numeric value, '?' for unknown variable, or 'r' to read from file.\n");
+                continue;
+            }
+            *value = *stored_value;
+            printf("%s read from file: %.4f\n", description, *stored_value);
+            break;
+        }
+        // reset startptr to beginning of buffer
+        startptr = buf;
 
         // check if first char of input is '?'
         if (*startptr == '?') {
@@ -48,7 +94,8 @@ void input_float(double *value, const char * description)
             while (isspace((unsigned char)*startptr)) startptr++; // skip ending space
             if (*startptr != '\0') { // if extra chars after '?'
                 if (DEBUG) printf("[Debug] Extra chars after '?': '%s'\n", startptr);
-                printf("Invalid input. Please enter a numeric value or '?' for unknown variable.\n");
+                if (isnan(*stored_value)) printf("Invalid input. Please enter a numeric value, '?' for unknown variable.\n");
+                else printf("Invalid input. Please enter a numeric value, '?' for unknown variable, or 'r' to read from file.\n");
                 continue;
             }
             *value = NAN;  // Use NaN to represent unknown variable
@@ -70,7 +117,7 @@ void input_float(double *value, const char * description)
             *value = input;
             break;
         }
-    } while (1);
+    } while (TRUE);
 }
 
 void output_float(const char *description, double value, const char *unit, int is_limited, double min, double max)
@@ -92,18 +139,64 @@ void output_float(const char *description, double value, const char *unit, int i
     }
 }
 
+int save_converter_params(const Converter_Params *params, const char *filename)
+{
+    FILE *fptr = fopen(filename, "wb");
+    if (!fptr) {
+        printf("Could not open file!\n");
+        return RETURN_ERROR;
+    }
+    // Reference: https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/fwrite?view=msvc-170
+    fwrite(params, sizeof(Converter_Params), 1, fptr);
+    fclose(fptr);
+    return RETURN_OK;
+}
+
+int load_converter_params(Converter_Params *params, const char *filename)
+{
+    FILE *fptr = fopen(filename, "rb");
+    if (!fptr) {
+        // printf("Could not open file!\n");
+        if (DEBUG) printf("[Debug] Could not open %s.\n", filename);
+        return RETURN_ERROR;
+    }
+    // Reference: https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/fread?view=msvc-170
+    fread(params, sizeof(Converter_Params), 1, fptr);
+    fclose(fptr);
+    if (DEBUG) printf("[Debug] Variables loaded from file.\n");
+    return RETURN_OK;
+}
+
+void init_converter_params(Converter_Params *params)
+{
+    // initialize all variables to NaN
+    params->Vo = NAN;
+    params->Vi = NAN;
+    params->K = NAN;
+    params->R = NAN;
+    params->L = NAN;
+    params->C = NAN;
+    params->f_s = NAN;
+    params->Io = NAN;
+    params->Delta_i = NAN;
+    params->Delta_v = NAN;
+    params->Delta_1 = NAN;
+}
+
 void buck_ccm_duty_cycle(void)
 {
     double Vo, Vi, K;
+    Converter_Params params;
+    if (load_converter_params(&params, DATA_FILE) != RETURN_OK) init_converter_params(&params);
     printf("\n>> Buck Converter - CCM Mode\n"
            "Formula (Duty cycle): K = Vo / Vi\n"
            "Variables: Vo (Output Voltage), Vi (Input Voltage), K (Duty Cycle)\n"
            "Provide any 2 values to calculate the other.\n"
            "Enter '?' for the unknown variable.\n");
     // Input values
-    input_float(&Vo, "Output Voltage (Vo: V)");
-    input_float(&Vi, "Input Voltage (Vi: V)");
-    input_float(&K,  "Duty Cycle (K)");
+    input_float(&Vo, &params.Vo, "Output Voltage (Vo: V)");
+    input_float(&Vi, &params.Vi, "Input Voltage (Vi: V)");
+    input_float(&K,  &params.K, "Duty Cycle (K)");
     // Determine if more than one variable is unknown
     if ((isnan(Vo) + isnan(Vi) + isnan(K)) != -1) {
         printf("Error: Please provide exactly 2 known values and 1 unknown value.\n");
@@ -122,120 +215,147 @@ void buck_ccm_duty_cycle(void)
     } else {
         printf("All variables provided. No calculation needed.\n");
     }
+    // Save variables to file
+    params.Vo = Vo;
+    params.Vi = Vi;
+    params.K = K;
+    save_converter_params(&params, DATA_FILE);
 }
+
 
 void buck_ccm_inductor_Iripple(void)
 {
-    double Vo, K, L, f_s, delta_i;
+    double Vo, K, L, f_s, Delta_i;
+    Converter_Params params;
+    if (load_converter_params(&params, DATA_FILE) != RETURN_OK) init_converter_params(&params);
     printf("\n>> Buck Converter - CCM Mode\n"
           "\nFormula: Delta i = ((1 - K) * Vo) / (f_s * L)\n"
            "Variables: Vo (Output Voltage), K (Duty Cycle), L (Inductance), f_s (Switching Frequency), Delta i (Current Ripple)\n"
            "Provide any 4 values to calculate the other.\n"
            "Enter '?' for the unknown variable.\n");
     // Input values
-    input_float(&Vo, "Output Voltage (Vo: V)");
-    input_float(&K,  "Duty Cycle (K)");
-    input_float(&L,  "Inductance (L: mH)");
+    input_float(&Vo, &params.Vo, "Output Voltage (Vo: V)");
+    input_float(&K,  &params.K, "Duty Cycle (K)");
+    input_float(&L,  &params.L, "Inductance (L: mH)");
     L /= 1e3; // convert to H
-    input_float(&f_s, "Switching Frequency (f_s: Hz)");
-    input_float(&delta_i, "Current Ripple (Delta i: A)");
+    input_float(&f_s, &params.f_s, "Switching Frequency (f_s: Hz)");
+    input_float(&Delta_i, &params.Delta_i, "Current Ripple (Delta i: A)");
     // Determine if more than one variable is unknown
-    if ((isnan(Vo) + isnan(K) + isnan(L) + isnan(f_s) + isnan(delta_i)) != -1) {
+    if ((isnan(Vo) + isnan(K) + isnan(L) + isnan(f_s) + isnan(Delta_i)) != -1) {
         printf("Error: Please provide exactly 4 known values and 1 unknown value.\n");
-        if (DEBUG) printf("[Debug] all=%d, Vo isnan=%d, K isnan=%d, L isnan=%d, f_s isnan=%d, delta_i isnan=%d\n",
-            (isnan(Vo) + isnan(K) + isnan(L) + isnan(f_s) + isnan(delta_i)),
-               isnan(Vo), isnan(K), isnan(L), isnan(f_s), isnan(delta_i));
+        if (DEBUG) printf("[Debug] all=%d, Vo isnan=%d, K isnan=%d, L isnan=%d, f_s isnan=%d, Delta_i isnan=%d\n",
+            (isnan(Vo) + isnan(K) + isnan(L) + isnan(f_s) + isnan(Delta_i)),
+               isnan(Vo), isnan(K), isnan(L), isnan(f_s), isnan(Delta_i));
         return;
     }
     // Determine which variable to calculate
-    if (isnan(delta_i)) {
-        delta_i = ((1 - K) * Vo) / (f_s * L); // \Delta i = \frac{(1-K)\cdot V_o}{f_s\cdot L}
-        printf("Calculated Current Ripple: Delta i = ((1 - K) * Vo) / (f_s * L): Delta i = %.4f A\n", delta_i);
+    if (isnan(Delta_i)) {
+        Delta_i = ((1 - K) * Vo) / (f_s * L); // \Delta i = \frac{(1-K)\cdot V_o}{f_s\cdot L}
+        printf("Calculated Current Ripple: Delta i = ((1 - K) * Vo) / (f_s * L): Delta i = %.4f A\n", Delta_i);
     } else if (isnan(Vo)) {
-        Vo = (delta_i * f_s * L) / (1 - K);
+        Vo = (Delta_i * f_s * L) / (1 - K);
         printf("Calculated Output Voltage: Vo = (Delta i * f_s * L) / (1 - K): Vo = %.4f V\n", Vo);
     } else if (isnan(K)) {
-        K = 1 - (delta_i * f_s * L) / Vo;
+        K = 1 - (Delta_i * f_s * L) / Vo;
         printf("Calculated Duty Cycle: K = 1 - (Delta i * f_s * L) / Vo: K = %.4f\n", K);
     } else if (isnan(L)) { // L = \frac{V_{o} (1 - K)}{\Delta_{i} f_{s}}
-        L = ((1 - K) * Vo) / (f_s * delta_i) * 1e3; // convert to mH
+        L = ((1 - K) * Vo) / (f_s * Delta_i) * 1e3; // convert to mH
         printf("Calculated Inductance: L = ((1 - K) * Vo) / (f_s * Delta i): L = %.4f mH\n", L);
     } else if (isnan(f_s)) {
-        f_s = ((1 - K) * Vo) / (L * delta_i);
+        f_s = ((1 - K) * Vo) / (L * Delta_i);
         printf("Calculated Switching Frequency: f_s = ((1 - K) * Vo) / (L * Delta i): f_s = %.4f Hz\n", f_s);
     } else {
         printf("All variables provided. No calculation needed.\n");
     }
+    // Save variables to file
+    params.Vo = Vo;
+    params.K = K;
+    params.L = L * 1e3; // convert back to mH
+    params.f_s = f_s;
+    params.Delta_i = Delta_i;
+    save_converter_params(&params, DATA_FILE);
 }
 
 void buck_ccm_capacitor_Vripple(void)
 {
-    double Vo, K, C, L, f_s, delta_v;
+    double Vo, K, C, L, f_s, Delta_v;
+    Converter_Params params;
+    if (load_converter_params(&params, DATA_FILE) != RETURN_OK) init_converter_params(&params);
     printf("\n>> Buck Converter - CCM Mode\n"
           "\nFormula: Delta Vout = ((1 - K) * Vo) / (8 * f_s^2 * C * L)\n"
            "Variables: Vo (Output Voltage), K (Duty Cycle), L (Inductance), f_s (Switching Frequency), Delta Vout (Voltage Ripple)\n"
            "Provide any 4 values to calculate the other.\n"
            "Enter '?' for the unknown variable.\n");
     // Input values
-    input_float(&Vo, "Output Voltage (Vo: V)");
-    input_float(&K,  "Duty Cycle (K)");
-    input_float(&C,  "Capacitance (C: uF)");
+    input_float(&Vo, &params.Vo, "Output Voltage (Vo: V)");
+    input_float(&K,  &params.K, "Duty Cycle (K)");
+    input_float(&C,  &params.C, "Capacitance (C: uF)");
     C /= 1e6; // convert to F
-    input_float(&L,  "Inductance (L: mH)");
+    input_float(&L,  &params.L, "Inductance (L: mH)");
     L /= 1e3; // convert to H
-    input_float(&f_s, "Switching Frequency (f_s: Hz)");
-    input_float(&delta_v, "Voltage Ripple (Delta v: V)");
+    input_float(&f_s, &params.f_s, "Switching Frequency (f_s: Hz)");
+    input_float(&Delta_v, &params.Delta_v, "Voltage Ripple (Delta v: V)");
     // Determine if more than one variable is unknown
-    if ((isnan(Vo) + isnan(K) + isnan(C) + isnan(L) + isnan(f_s) + isnan(delta_v)) != -1) {
+    if ((isnan(Vo) + isnan(K) + isnan(C) + isnan(L) + isnan(f_s) + isnan(Delta_v)) != -1) {
         printf("Error: Please provide exactly 4 known values and 1 unknown value.\n");
-        if (DEBUG) printf("[Debug] all=%d, Vo isnan=%d, K isnan=%d, C isnan=%d, L isnan=%d, f_s isnan=%d, delta_v isnan=%d\n",
-            (isnan(Vo) + isnan(K) + isnan(C) + isnan(L) + isnan(f_s) + isnan(delta_v)),
-               isnan(Vo), isnan(K), isnan(C), isnan(L), isnan(f_s), isnan(delta_v));
+        if (DEBUG) printf("[Debug] all=%d, Vo isnan=%d, K isnan=%d, C isnan=%d, L isnan=%d, f_s isnan=%d, Delta_v isnan=%d\n",
+            (isnan(Vo) + isnan(K) + isnan(C) + isnan(L) + isnan(f_s) + isnan(Delta_v)),
+               isnan(Vo), isnan(K), isnan(C), isnan(L), isnan(f_s), isnan(Delta_v));
         return;
     }
     // Determine which variable to calculate
-    if (isnan(delta_v)) {
-        delta_v = ((1 - K) * Vo) / (8 * f_s * f_s * C * L);
+    if (isnan(Delta_v)) {
+        Delta_v = ((1 - K) * Vo) / (8 * f_s * f_s * C * L);
         printf("Calculated Voltage Ripple: Delta v = ((1 - K) * Vo) / (8 * f_s^2 * C * L): \n"
-               "Delta v = %.4f V\n", delta_v);
+               "Delta v = %.4f V\n", Delta_v);
     } else if (isnan(Vo)) {
-        Vo = (delta_v * 8 * f_s * f_s * C * L) / (1 - K);
+        Vo = (Delta_v * 8 * f_s * f_s * C * L) / (1 - K);
         printf("Calculated Output Voltage: Vo = (Delta v * 8 * f_s^2 * C * L) / (1 - K): \n"
                "Vo = %.4f V\n", Vo);
     } else if (isnan(K)) {
-        K = 1 - (delta_v * 8 * f_s * f_s * C * L) / Vo;
+        K = 1 - (Delta_v * 8 * f_s * f_s * C * L) / Vo;
         printf("Calculated Duty Cycle: K = 1 - (Delta v * 8 * f_s^2 * C * L) / Vo: \n"
                "K = %.4f\n", K);
     } else if (isnan(C)) {
-        C = ((1 - K) * Vo) / (delta_v * 8 * f_s * f_s * L) * 1e6; // convert to uF
+        C = ((1 - K) * Vo) / (Delta_v * 8 * f_s * f_s * L) * 1e6; // convert to uF
         printf("Calculated Capacitance: C = ((1 - K) * Vo) / (Delta v * 8 * f_s^2 * L): \n"
                "C = %.4f uF\n", C);
     }else if (isnan(L)) {
-        L = ((1 - K) * Vo) / (delta_v * 8 * f_s * f_s * C) * 1e3; // convert to mH
+        L = ((1 - K) * Vo) / (Delta_v * 8 * f_s * f_s * C) * 1e3; // convert to mH
         printf("Calculated Inductance: L = ((1 - K) * Vo) / (Delta v * 8 * f_s^2 * C): \n"
                "L = %.4f mH\n", L);
     } else if (isnan(f_s)) {
-        f_s = ((1 - K) * Vo) / (8 * C * delta_v);
+        f_s = ((1 - K) * Vo) / (8 * C * Delta_v);
         printf("Calculated Switching Frequency: f_s = ((1 - K) * Vo) / (8 * C * Delta v): \n"
                "f_s = %.4f Hz\n", f_s);
     } else {
         printf("All variables provided. No calculation needed.\n");
     }
+    // Save variables to file
+    params.Vo = Vo;
+    params.K = K;
+    params.C = C * 1e6; // convert back to uF
+    params.L = L * 1e3; // convert back to mH
+    params.f_s = f_s;
+    params.Delta_v = Delta_v;
+    save_converter_params(&params, DATA_FILE);
 }
 
 void buck_dcm_duty_cycle(void)
 {
     double Vo, Vi, K, Delta_1;
+    Converter_Params params;
+    if (load_converter_params(&params, DATA_FILE) != RETURN_OK) init_converter_params(&params);
     printf("\n>> Buck Converter - DCM\n"
           "\nFormula: Vo / Vi = K / (K + Delta 1)\n"
            "Variables: Vo (Output Voltage), Vi (Input Voltage), K (Duty Cycle), Delta 1 (Close time)\n"
            "Provide any 3 values to calculate the other.\n"
            "Enter '?' for the unknown variable.\n");
     // Input values
-    input_float(&Vo, "Output Voltage (Vo: V)");
-    input_float(&Vi, "Input Voltage (Vi: V)");
-    input_float(&K,  "Duty Cycle (K)");
-    input_float(&Delta_1, "Close time (Delta 1)");
+    input_float(&Vo, &params.Vo, "Output Voltage (Vo: V)");
+    input_float(&Vi, &params.Vi, "Input Voltage (Vi: V)");
+    input_float(&K,  &params.K, "Duty Cycle (K)");
+    input_float(&Delta_1, &params.Delta_1, "Close time (Delta 1)");
     // Determine if more than one variable is unknown
     if ((isnan(Vo) + isnan(Vi) + isnan(K) + isnan(Delta_1)) != -1) {
         printf("Error: Please provide exactly 3 known values and 1 unknown value.\n");
@@ -257,24 +377,31 @@ void buck_dcm_duty_cycle(void)
     } else {
         printf("All variables provided. No calculation needed.\n");
     }
-
+    // Save variables to file
+    params.Vo = Vo;
+    params.Vi = Vi;
+    params.K = K;
+    params.Delta_1 = Delta_1;
+    save_converter_params(&params, DATA_FILE);
 }
 
 void buck_dcm_boundary_constant_vi(void)
 {
     double Vi, K, L, f_s, Io;
+    Converter_Params params;
+    if (load_converter_params(&params, DATA_FILE) != RETURN_OK) init_converter_params(&params);
     printf("\n>> Buck Converter - DCM\n"
            "\nFormula: Io = (Vi * 1/fs) / (2 * L) * K * (1 - K)\n"
            "Variables: Vi (Input Voltage), K (Duty Cycle), L (Close time), f_s (Switching Frequency), Io (Output Current)\n"
            "Provide any 4 values to calculate the other.\n"
            "Enter '?' for the unknown variable.\n");
     // Input values
-    input_float(&Vi, "Input Voltage (Vi: V)");
-    input_float(&K,  "Duty Cycle (K)");
-    input_float(&L,  "Inductance (L: mH)");
+    input_float(&Vi, &params.Vi, "Input Voltage (Vi: V)");
+    input_float(&K,  &params.K, "Duty Cycle (K)");
+    input_float(&L,  &params.L, "Inductance (L: mH)");
     L /= 1e3; // convert to H
-    input_float(&f_s, "Switching Frequency (f_s: Hz)");
-    input_float(&Io, "Output Current (Io: A)");
+    input_float(&f_s, &params.f_s, "Switching Frequency (f_s: Hz)");
+    input_float(&Io, &params.Io, "Output Current (Io: A)");
     // Determine if more than one variable is unknown
     if ((isnan(Vi) + isnan(K) + isnan(L) + isnan(f_s) + isnan(Io)) != -1) {
         printf("Error: Please provide exactly 4 known values and 1 unknown value.\n");
@@ -304,23 +431,32 @@ void buck_dcm_boundary_constant_vi(void)
     } else {
         printf("All variables provided. No calculation needed.\n");
     }
+    // Save variables to file
+    params.Vi = Vi;
+    params.K = K;
+    params.L = L;
+    params.f_s = f_s;
+    params.Io = Io;
+    save_converter_params(&params, DATA_FILE);
 }
 
 void buck_dcm_boundary_constant_vo(void)
 {
     double Vo, K, L, f_s, Io;
+    Converter_Params params;
+    if (load_converter_params(&params, DATA_FILE) != RETURN_OK) init_converter_params(&params);
     printf("\n>> Buck Converter - DCM\n"
            "\nFormula: I_o = (Vo * 1/fs) / (2 * L) * (1 - K)\n"
            "Variables: Vo (Output Voltage), K (Duty Cycle), L (Close time), f_s (Switching Frequency), Io (Output Current)\n"
            "Provide any 4 values to calculate the other.\n"
            "Enter '?' for the unknown variable.\n");
     // Input values
-    input_float(&Vo, "Output Voltage (Vo: V)");
-    input_float(&K,  "Duty Cycle (K)");
-    input_float(&L,  "Inductance (L: mH)");
+    input_float(&Vo, &params.Vo, "Output Voltage (Vo: V)");
+    input_float(&K,  &params.K, "Duty Cycle (K)");
+    input_float(&L,  &params.L, "Inductance (L: mH)");
     L /= 1e3; // convert to H
-    input_float(&f_s, "Switching Frequency (f_s: Hz)");
-    input_float(&Io, "Output Current (Io: A)");
+    input_float(&f_s, &params.f_s, "Switching Frequency (f_s: Hz)");
+    input_float(&Io, &params.Io, "Output Current (Io: A)");
     // Determine if more than one variable is unknown
     if ((isnan(Vo) + isnan(K) + isnan(L) + isnan(f_s) + isnan(Io)) != -1) {
         printf("Error: Please provide exactly 4 known values and 1 unknown value.\n");
@@ -350,20 +486,29 @@ void buck_dcm_boundary_constant_vo(void)
     } else {
         printf("All variables provided. No calculation needed.\n");
     }
+    // Save variables to file
+    params.Vo = Vo;
+    params.K = K;
+    params.L = L;
+    params.f_s = f_s;
+    params.Io = Io;
+    save_converter_params(&params, DATA_FILE);
 }
 
 void boost_ccm_duty_cycle(void)
 {
     double Vo, Vi, K;
+    Converter_Params params;
+    if (load_converter_params(&params, DATA_FILE) != RETURN_OK) init_converter_params(&params);
     printf("\n>> Boost Converter - CCM\n"
-           "\nFormula: Vo/Vi = 1 / (1-K)\n"
+           "\nFormula: Vo / Vi = 1 / (1 - K)\n"
            "Variables: Vo (Output Voltage), Vi (Input Voltage), K (Duty Cycle)\n"
            "Provide any 3 values to calculate the other.\n"
            "Enter '?' for the unknown variable.\n");
     // Input values
-    input_float(&Vo, "Output Voltage (Vo: V)");
-    input_float(&Vi, "Input Voltage (Vi: V)");
-    input_float(&K,  "Duty Cycle (K)");
+    input_float(&Vo, &params.Vo, "Output Voltage (Vo: V)");
+    input_float(&Vi, &params.Vi, "Input Voltage (Vi: V)");
+    input_float(&K,  &params.K, "Duty Cycle (K)");
 
     // Determine if more than one variable is unknown
     if ((isnan(Vo) + isnan(Vi) + isnan(K)) != -1) {
@@ -387,23 +532,30 @@ void boost_ccm_duty_cycle(void)
     } else {
         printf("All variables provided. No calculation needed.\n");
     }
+    // Save variables to file
+    params.Vo = Vo;
+    params.Vi = Vi;
+    params.K = K;
+    save_converter_params(&params, DATA_FILE);
 }
 
 void boost_ccm_inductor_Iripple(void)
 {
     double Vi, K, L, f_s, Delta_i;
+    Converter_Params params;
+    if (load_converter_params(&params, DATA_FILE) != RETURN_OK) init_converter_params(&params);
     printf("\n>> Boost Converter - CCM\n"
            "\nFormula: L = (Vi * K) / (f_s * Delta_i)\n"
            "Variables: Vi (Input Voltage), K (Duty Cycle), L (Inductance), f_s (Switching Frequency), Delta_i (Inductor Current Ripple)\n"
            "Provide any 4 values to calculate the other.\n"
            "Enter '?' for the unknown variable.\n");
     // Input values
-    input_float(&Vi, "Input Voltage (Vi: V)");
-    input_float(&K,  "Duty Cycle (K)");
-    input_float(&L,  "Inductance (L: mH)");
+    input_float(&Vi, &params.Vi, "Input Voltage (Vi: V)");
+    input_float(&K,  &params.K, "Duty Cycle (K)");
+    input_float(&L,  &params.L, "Inductance (L: mH)");
     L /= 1e3; // convert to H
-    input_float(&f_s, "Switching Frequency (f_s: Hz)");
-    input_float(&Delta_i, "Inductor Current Ripple (Delta i: A)");
+    input_float(&f_s, &params.f_s, "Switching Frequency (f_s: Hz)");
+    input_float(&Delta_i, &params.Delta_i, "Inductor Current Ripple (Delta i: A)");
 
     // Determine if more than one variable is unknown
     if ((isnan(Vi) + isnan(K) + isnan(L) + isnan(f_s) + isnan(Delta_i)) != 1) {
@@ -434,24 +586,33 @@ void boost_ccm_inductor_Iripple(void)
     } else {
         printf("All variables provided. No calculation needed.\n");
     }
+    // Save variables to file
+    params.Vi = Vi;
+    params.K = K;
+    params.L = L;
+    params.f_s = f_s;
+    params.Delta_i = Delta_i;
+    save_converter_params(&params, DATA_FILE);
 }
 
 void boost_ccm_capacitor_Vripple(void)
 {
     double Vo, K, R, C, f_s, Delta_v;
+    Converter_Params params;
+    if (load_converter_params(&params, DATA_FILE) != RETURN_OK) init_converter_params(&params);
     printf("\n>> Boost Converter - CCM\n"
            "\nFormula: C = (Vo * K)/(Delta_v * R * f_s)\n"
            "Variables: Vo (Output Voltage), K (Duty Cycle), R (Load Resistance), C (Capacitance), f_s (Switching Frequency), Delta_v (Capacitor Voltage Ripple)\n"
            "Provide any 5 values to calculate the other.\n"
            "Enter '?' for the unknown variable.\n");
     // Input values
-    input_float(&Vo, "Output Voltage (Vo: V)");
-    input_float(&K,  "Duty Cycle (K)");
-    input_float(&R,  "Load Resistance (R: Ohm)");
-    input_float(&C,  "Capacitance (C: uF)");
+    input_float(&Vo, &params.Vo, "Output Voltage (Vo: V)");
+    input_float(&K,  &params.K, "Duty Cycle (K)");
+    input_float(&R,  &params.R, "Load Resistance (R: Ohm)");
+    input_float(&C,  &params.C, "Capacitance (C: uF)");
     C /= 1e6; // convert to F
-    input_float(&f_s, "Switching Frequency (f_s: Hz)");
-    input_float(&Delta_v, "Capacitor Voltage Ripple (Delta v: V)");
+    input_float(&f_s, &params.f_s, "Switching Frequency (f_s: Hz)");
+    input_float(&Delta_v, &params.Delta_v, "Capacitor Voltage Ripple (Delta v: V)");
     // Determine if more than one variable is unknown
     if ((isnan(Vo) + isnan(K) + isnan(R) + isnan(C) + isnan(f_s) + isnan(Delta_v)) != 1) {
         printf("Error: Please provide exactly 5 known values and 1 unknown value.\n");
@@ -485,21 +646,31 @@ void boost_ccm_capacitor_Vripple(void)
     } else {
         printf("All variables provided. No calculation needed.\n");
     }
+    // Save variables to file
+    params.Vo = Vo;
+    params.K = K;
+    params.R = R;
+    params.C = C * 1e-6; // convert back to F
+    params.f_s = f_s;
+    params.Delta_v = Delta_v;
+    save_converter_params(&params, DATA_FILE);
 }
 
 void boost_dcm_duty_cycle(void)
 {
     double Vo, Vi, K, Delta_1;
+    Converter_Params params;
+    if (load_converter_params(&params, DATA_FILE) != RETURN_OK) init_converter_params(&params);
     printf("\n>> Boost Converter - DCM\n"
            "\nFormula: Vo/Vi = (K + Delta_1)/Delta_1\n" // \frac{V_{o}}{V_{i}} = \frac{\Delta_{1} + K}{\Delta_{1}}
-           "Variables: Vo (Output Voltage), K (Duty Cycle), Vi (Input Voltage), Delta_1 (Close time)\n"
+           "Variables: Vo (Output Voltage), Vi (Input Voltage), K (Duty Cycle), Delta_1 (Close time)\n"
            "Provide any 3 values to calculate the other.\n"
            "Enter '?' for the unknown variable.\n");
     // Input values
-    input_float(&Vo, "Output Voltage (Vo: V)");
-    input_float(&Vi, "Input Voltage (Vi: V)");
-    input_float(&K,  "Duty Cycle (K)");
-    input_float(&Delta_1, "Close time (Delta 1)");
+    input_float(&Vo, &params.Vo, "Output Voltage (Vo: V)");
+    input_float(&Vi, &params.Vi, "Input Voltage (Vi: V)");
+    input_float(&K,  &params.K, "Duty Cycle (K)");
+    input_float(&Delta_1, &params.Delta_1, "Close time (Delta 1)");
     // Determine if more than one variable is unknown
     if ((isnan(Vo) + isnan(Vi) + isnan(K) + isnan(Delta_1)) != -1) {
         printf("Error: Please provide exactly 3 known values and 1 unknown value.\n");
@@ -521,23 +692,31 @@ void boost_dcm_duty_cycle(void)
     } else {
         printf("All variables provided. No calculation needed.\n");
     }
+    // Save variables to file
+    params.Vo = Vo;
+    params.Vi = Vi;
+    params.K = K;
+    params.Delta_1 = Delta_1;
+    save_converter_params(&params, DATA_FILE);
 }
 
 void boost_dcm_boundary_constant_vi(void)
 {
     double Vi, K, L, f_s, Io;
+    Converter_Params params;
+    if (load_converter_params(&params, DATA_FILE) != RETURN_OK) init_converter_params(&params);
     printf("\n>> Boost Converter - DCM\n"
-           "\nFormula: Vo/Vi = (K + Delta_1)/Delta_1\n" // I_{o} = \frac{K V_{i} \left(1 - K\right)}{2 L f_{s}}
+           "\nFormula: Io = K * Vi * (1 - K)/(2 * L * f_s)\n" // I_{o} = \frac{K V_{i} \left(1 - K\right)}{2 L f_{s}}
            "Variables: Vi (Input Voltage), K (Duty Cycle), L (Inductance), f_s (Switching Frequency), Io (Output Current)\n"
            "Provide any 4 values to calculate the other.\n"
            "Enter '?' for the unknown variable.\n");
     // Input values
-    input_float(&Vi, "Input Voltage (Vi: V)");
-    input_float(&K,  "Duty Cycle (K)");
-    input_float(&L,  "Inductance (L: mH)");
+    input_float(&Vi, &params.Vi, "Input Voltage (Vi: V)");
+    input_float(&K,  &params.K, "Duty Cycle (K)");
+    input_float(&L,  &params.L, "Inductance (L: mH)");
     L /= 1e3; // convert to H
-    input_float(&f_s, "Switching Frequency (f_s: Hz)");
-    input_float(&Io, "Output Current (Io: A)");
+    input_float(&f_s, &params.f_s, "Switching Frequency (f_s: Hz)");
+    input_float(&Io, &params.Io, "Output Current (Io: A)");
     // Determine if more than one variable is unknown
     if ((isnan(Vi) + isnan(K) + isnan(L) + isnan(f_s) + isnan(Io)) != -1) {
         printf("Error: Please provide exactly 4 known values and 1 unknown value.\n");
@@ -567,23 +746,32 @@ void boost_dcm_boundary_constant_vi(void)
     } else {
         printf("All variables provided. No calculation needed.\n");
     }
+    // Save variables to file
+    params.Vi = Vi;
+    params.K = K;
+    params.L = L * 1e3; // convert back to mH
+    params.f_s = f_s;
+    params.Io = Io;
+    save_converter_params(&params, DATA_FILE);
 }
 
 void boost_dcm_boundary_constant_vo(void)
 {
     double Vo, K, L, f_s, Io;
+    Converter_Params params;
+    if (load_converter_params(&params, DATA_FILE) != RETURN_OK) init_converter_params(&params);
     printf("\n>> Boost Converter - DCM\n"
-           "\nFormula: I_o = V_o * K * (1-K)*(1-K) / (2 * L * f_s)\n" // I_{o} = \frac{V_{i} K \left(1 - K\right)^2}{2 L f_{s}}
+           "\nFormula: I_o = V_o * K * (1-K)*(1-K) / (2 * L * f_s)\n" // I_{o} = \frac{V_{o} K \left(1 - K\right)^2}{2 L f_{s}}
            "Variables: Vo (Output Voltage), K (Duty Cycle), L (Close time), f_s (Switching Frequency), Io (Output Current)\n"
            "Provide any 4 values to calculate the other.\n"
            "Enter '?' for the unknown variable.\n");
     // Input values
-    input_float(&Vo, "Output Voltage (Vo: V)");
-    input_float(&K,  "Duty Cycle (K)");
-    input_float(&L,  "Inductance (L: mH)");
+    input_float(&Vo, &params.Vo, "Output Voltage (Vo: V)");
+    input_float(&K,  &params.K, "Duty Cycle (K)");
+    input_float(&L,  &params.L, "Inductance (L: mH)");
     L /= 1e3; // convert to H
-    input_float(&f_s, "Switching Frequency (f_s: Hz)");
-    input_float(&Io, "Output Current (Io: A)");
+    input_float(&f_s, &params.f_s, "Switching Frequency (f_s: Hz)");
+    input_float(&Io, &params.Io, "Output Current (Io: A)");
     // Determine if more than one variable is unknown
     if ((isnan(Vo) + isnan(K) + isnan(L) + isnan(f_s) + isnan(Io)) != -1) {
         printf("Error: Please provide exactly 4 known values and 1 unknown value.\n");
@@ -595,15 +783,15 @@ void boost_dcm_boundary_constant_vo(void)
         printf("Calculated Input Voltage (Vo = 2*Io*L*f_s/(K*(K - 1)^2)): \n"
                "Vo = %.4f V\n", Vo);
     } else if (isnan(K)) {
-/*
-Formula for finding roots of a cubic equation:
-K = \frac{
-        \sqrt[3]{\frac{- 27 I_{o} L f_{s} + V_{o}
-        \left(\sqrt{\frac{- V_{o}^{2} + \left(27 I_{o} L f_{s} - V_{o}\right)^{2}}{V_{o}^{2}}} + 1\right)}{V_{o}}} \left(1 + \sqrt{3} i\right)
-        \left(\sqrt[3]{\frac{- 27 I_{o} L f_{s} + V_{o} \left(\sqrt{\frac{- V_{o}^{2} + \left(27 I_{o} L f_{s} - V_{o}\right)^{2}}{V_{o}^{2}}} + 1\right)}{V_{o}}} \left(1 + \sqrt{3} i\right) + 4\right) + 4
-    }
-    {6 \sqrt[3]{\frac{- 27 I_{o} L f_{s} + V_{o} \left(\sqrt{\frac{- V_{o}^{2} + \left(27 I_{o} L f_{s} - V_{o}\right)^{2}}{V_{o}^{2}}} + 1\right)}{V_{o}}} \left(1 + \sqrt{3} i\right)}
-*/
+    /*
+    Formula for finding roots of a cubic equation:
+    K = \frac{
+            \sqrt[3]{\frac{- 27 I_{o} L f_{s} + V_{o}
+            \left(\sqrt{\frac{- V_{o}^{2} + \left(27 I_{o} L f_{s} - V_{o}\right)^{2}}{V_{o}^{2}}} + 1\right)}{V_{o}}} \left(1 + \sqrt{3} i\right)
+            \left(\sqrt[3]{\frac{- 27 I_{o} L f_{s} + V_{o} \left(\sqrt{\frac{- V_{o}^{2} + \left(27 I_{o} L f_{s} - V_{o}\right)^{2}}{V_{o}^{2}}} + 1\right)}{V_{o}}} \left(1 + \sqrt{3} i\right) + 4\right) + 4
+        }
+        {6 \sqrt[3]{\frac{- 27 I_{o} L f_{s} + V_{o} \left(\sqrt{\frac{- V_{o}^{2} + \left(27 I_{o} L f_{s} - V_{o}\right)^{2}}{V_{o}^{2}}} + 1\right)}{V_{o}}} \left(1 + \sqrt{3} i\right)}
+    */
         printf("Unable to calculate Duty Cycle (K) The formula contains imaginary numbers: \n"
                "K = %.4f\n", K);
     } else if (isnan(L)) {
@@ -621,4 +809,11 @@ K = \frac{
     } else {
         printf("All variables provided. No calculation needed.\n");
     }
+    // Save variables to file
+    params.Vo = Vo;
+    params.K = K;
+    params.L = L * 1e3; // convert back to mH
+    params.f_s = f_s;
+    params.Io = Io;
+    save_converter_params(&params, DATA_FILE);
 }

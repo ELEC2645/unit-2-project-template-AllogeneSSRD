@@ -131,7 +131,7 @@ static void select_menu_item(int input)
 
 static void print_main_menu(void)
 {
-    printf("\n----------- Main menu -----------\n");
+    printf("\n------------ Main menu ------------\n");
     printf("\n"
            "\t\t\t\t\t\t\n"
            "\t1. Buck Converter - CCM\t\t\n"
@@ -171,7 +171,7 @@ static void print_sub_menu_buck_ccm(void)
            "\t4. Back to Main Menu\t\t\n"
            "\t5. Exit\t\t\t\t\n"
            "\t\t\t\t\t\t\n");
-    printf("--------------------------------------------\n");
+    printf("------------------------------------------\n");
 }
 
 static int select_sub_menu_buck_ccm(int input)
@@ -224,7 +224,7 @@ static void print_sub_menu_buck_dcm(void)
            "\t4. Back to Main Menu\t\t\n"
            "\t5. Exit\t\t\t\t\n"
            "\t\t\t\t\t\t\n");
-    printf("--------------------------------------------\n");
+    printf("------------------------------------------\n");
 }
 
 static int select_sub_menu_buck_dcm(int input)
@@ -276,7 +276,7 @@ static void print_sub_menu_boost_ccm(void)
            "\t4. Back to Main Menu\t\t\n"
            "\t5. Exit\t\t\t\t\n"
            "\t\t\t\t\t\t\n");
-    printf("--------------------------------------------\n");
+    printf("-------------------------------------------\n");
 }
 
 static int select_sub_menu_boost_ccm(int input)
@@ -327,7 +327,7 @@ static void print_sub_menu_boost_dcm(void)
            "\t4. Back to Main Menu\t\t\n"
            "\t5. Exit\t\t\t\t\n"
            "\t\t\t\t\t\t\n");
-    printf("--------------------------------------------\n");
+    printf("-------------------------------------------\n");
 }
 
 static int select_sub_menu_boost_dcm(int input)

@@ -6,7 +6,7 @@
 #ifndef FUNCS_H
 #define FUNCS_H
 
-void input_float(double *value, const char * description);
+void input_float(double *value, double *cache_value, const char * description);
 
 void buck_ccm_duty_cycle(void);
 void buck_ccm_inductor_Iripple(void);
