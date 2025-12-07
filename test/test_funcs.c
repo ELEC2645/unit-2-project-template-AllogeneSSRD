@@ -1,7 +1,6 @@
 // Unit tests for funcs.c
 // Auther: Xiangcheng Tao
-// Student ID: 202013365
-// Filename: main.c
+// Filename: test_funcs.c
 // Create date: 2025-11-30
 
 #include <stdio.h>
