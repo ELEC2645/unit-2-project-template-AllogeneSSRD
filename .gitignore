@@ -51,6 +51,9 @@ docs/*.drawio
 
 # !README.md
 !docs/attachments/*.jpg
+!docs/attachments/main_*
+!docs/attachments/flow_*
+!docs/attachments/ppt_*
 *.mp4
 *.pptx
 *.thmx

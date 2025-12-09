@@ -10,7 +10,7 @@ A interactive C command-line tool designed for Power Electronics engineers and s
 
 **Workflow:**
 
-![](attachments/flow_RGBA.drawio.png)
+![](docs/attachments/flow_black.drawio.png)
 
 ## Installation & Build
 
@@ -57,7 +57,7 @@ gcc main.c funcs.c -o main.out -lm
 ### 1. Main Menu
 Main menu will show upon launching, select your converter topology and operating mode:
 
-![](attachments/ppt_RGBA.drawio.png)
+![](docs/attachments/main_menu_black.drawio.png)
 
 ```bash
 ----------- Main menu -----------
@@ -173,6 +173,6 @@ Calculated Duty Cycle (K = Vo / Vi): K = 2.5000  (Out of range: 0,1)
 
 This project is licensed under the [Apache License](LICENSE)
 
-
 Copyright © 2025 [University of Leeds](https://www.leeds.ac.uk/)
+
 Licensed under the Apache License, Version 2.0
