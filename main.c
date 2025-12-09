@@ -17,7 +17,7 @@
 #endif
 
 #ifndef DEBUG
-#define DEBUG 1  // Set to 1 to enable debug output
+#define DEBUG 0  // Set to 1 to enable debug output
 #endif
 
 /* Prototypes mirroring the C++ version */
@@ -51,7 +51,7 @@ static int  is_integer(const char *s);  /* validate integer string */
 
 int main(void)
 {
-    printf("DC-DC Converter Calculator\n"
+    printf("DC-DC Converter Smart Variable Solver\n"
            "Auther: Xiangcheng Tao\n"
            "\n"
     );

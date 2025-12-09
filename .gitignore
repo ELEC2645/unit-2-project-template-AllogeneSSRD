@@ -48,11 +48,19 @@ docs/*.pdf
 docs/*.docx
 docs/*/*.png
 docs/*.drawio
+
 # !README.md
 !docs/attachments/*.jpg
+*.mp4
+*.pptx
+*.thmx
 
 # Temporary files
 *.zip
+*.log
+*.data
 input.txt
 output.txt
-*.log
+
+# Backup files
+DC-DC_Converter_Smart_Variable_Solver_*/
