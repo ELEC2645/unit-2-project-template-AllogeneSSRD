@@ -1,4 +1,4 @@
-# DC-DC Converter Calculator
+# DC-DC Converter Smart Variable Solver
 
 ![Static Badge](https://img.shields.io/badge/language-C-blue)
 ![GitHub License](https://img.shields.io/github/license/ELEC2645/unit-2-project-template-AllogeneSSRD)
